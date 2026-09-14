@@ -2286,6 +2286,10 @@ void App::build_settings_screen(std::ostringstream& frame, int W, int player_h) 
 // Frame assembly
 // ---------------------------------------------------------------------
 
+
+// Need to fix this to prevent waterfalling, and add auto removal or prevention of artifacting via running while resizing terminal.
+
+
 std::string App::render_frame(TerminalIO& term) {
     int term_cols = term.cols();
     // Was clamped to a minimum of 80 regardless of the real terminal
