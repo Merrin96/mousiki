@@ -2377,7 +2377,7 @@ int App::run() {
     TerminalIO term;
     last_frame_time_ = std::chrono::steady_clock::now();
 
-    // Hide cursor, and ui in alt screen.
+    // Hide cursor and UI in alt screen.
     // Restore terminal if a C++ exception occurs.
     struct AltScreenGuard {
         AltScreenGuard() { std::cout << "\x1b[?1049h\x1b[?25l" << std::flush; }
@@ -2402,7 +2402,7 @@ int App::run() {
             if (player_.finished()) advance_track();
         }
         
-        // Spin disk only when playing
+        // Spin disk only when playing track
         if (has_track_ && !player_.is_paused()) {
             angle_ = std::fmod(angle_ + kAngularVelocity * settings_.disk_rotation_speed * dt,
                                2.0 * 3.14159265358979323846);
