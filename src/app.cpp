@@ -2377,6 +2377,13 @@ int App::run() {
     TerminalIO term;
     last_frame_time_ = std::chrono::steady_clock::now();
 
+    // Hide cursor, and ui in alt screen.
+    // Restore terminal if a C++ exception occurs.
+    struct AltScreenGuard {
+        AltScreenGuard() { std::cout << "\x1b[?1049h\x1b[?25l" << std::flush; }
+        ~AltScreenGuard() { std::cout << "\x1b[?1049l\x1b[?25h" << std::flush; }
+    } screen_guard;
+
     while (!quit_) {
         int key = term.poll_key();
         handle_key(key);
@@ -2394,30 +2401,25 @@ int App::run() {
             player_.poll_elapsed();
             if (player_.finished()) advance_track();
         }
-        // Disk only spins while something is actually playing — frozen
-        // when idle or paused, per instruction.
+        
+        // Spin disk only when playing
         if (has_track_ && !player_.is_paused()) {
             angle_ = std::fmod(angle_ + kAngularVelocity * settings_.disk_rotation_speed * dt,
                                2.0 * 3.14159265358979323846);
         }
 
         std::cout << render_frame(term) << std::flush;
-        // 25fps (was 12.5fps) — the 700ms waveform reveal animation only
-        // got ~9 frames to work with at the old 80ms cadence, which
-        // showed as a handful of visible ~11% jumps rather than a smooth
-        // continuous expansion. Also smooths disk rotation and the
-        // visualizer's motion generally. Text-frame rendering is cheap
-        // enough that doubling the rate here is not a meaningful CPU/
-        // battery concern.
         std::this_thread::sleep_for(std::chrono::milliseconds(40));
     }
 
     player_.stop();
     term.restore();
     save_settings(settings_);
+
     if (load_thread_.joinable()) load_thread_.join();
     if (search_thread_.joinable()) search_thread_.join();
     if (device_thread_.joinable()) device_thread_.join();
+    
     std::cout << "\nbye.\n";
     return 0;
 }
